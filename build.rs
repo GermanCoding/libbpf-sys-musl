@@ -35,8 +35,8 @@ fn generate_bindings(src_dir: path::PathBuf) {
             "BTF_KIND_DECL_TAG",
             "BTF_KIND_TYPE_TAG",
         ]
-        .into_iter()
-        .collect(),
+            .into_iter()
+            .collect(),
     );
 
     bindgen::Builder::default()
@@ -127,6 +127,9 @@ fn main() {
         // create obj_dir if it doesn't exist
         let obj_dir = path::PathBuf::from(&out_dir.join("obj").into_os_string());
         let _ = fs::create_dir(&obj_dir);
+        let mut flags = compiler.cflags_env();
+        flags.push(" -I");
+        flags.push(src_dir.join("include").into_os_string());
 
         let status = process::Command::new("make")
             .arg("install")
@@ -136,7 +139,7 @@ fn main() {
             .env("OBJDIR", &obj_dir)
             .env("DESTDIR", &out_dir)
             .env("CC", compiler.path())
-            .env("CFLAGS", compiler.cflags_env())
+            .env("CFLAGS", flags)
             .current_dir(&src_dir.join("libbpf/src"))
             .status()
             .expect("could not execute make");
@@ -155,6 +158,7 @@ fn main() {
             .file("bindings.c")
             .include(&src_dir.join("libbpf/include"))
             .include(&src_dir.join("libbpf/include/uapi"))
+            .include(&src_dir.join("include"))
             .out_dir(&out_dir)
             .compile("bindings");
 
@@ -166,13 +170,18 @@ fn main() {
             .unwrap();
         io::stdout().write_all("\n".as_bytes()).unwrap();
         io::stdout()
-            .write_all("cargo:rustc-link-lib=elf\n".as_bytes())
+            .write_all("cargo:rustc-link-search=".as_bytes())
             .unwrap();
         io::stdout()
-            .write_all("cargo:rustc-link-lib=z\n".as_bytes())
+            .write_all(src_dir.join("libs").as_os_str().as_bytes())
             .unwrap();
         io::stdout()
-            .write_all("cargo:rustc-link-lib=static=bpf\n".as_bytes())
+            .write_all("\ncargo:rustc-link-lib=static=elf\n\
+                          cargo:rustc-link-lib=static=z\n\
+                          cargo:rustc-link-lib=static=argp\n\
+                          cargo:rustc-link-lib=static=fts\n\
+                          cargo:rustc-link-lib=static=obstack\n\
+                          cargo:rustc-link-lib=static=bpf\n".as_bytes())
             .unwrap();
         io::stdout().write_all("cargo:include=".as_bytes()).unwrap();
         io::stdout()
