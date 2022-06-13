@@ -131,6 +131,21 @@ fn main() {
         flags.push(" -I");
         flags.push(src_dir.join("include").into_os_string());
 
+        if env::var("CARGO_CFG_TARGET_ENV").unwrap().contains("musl") {
+            // Externally populate include directory + build libelf with dependencies
+            let triple = env::var("CARGO_CFG_TARGET_ARCH").unwrap()
+                + "-" + &env::var("CARGO_CFG_TARGET_OS").unwrap()
+                + "-" + &env::var("CARGO_CFG_TARGET_ENV").unwrap();
+            let status = process::Command::new("./build-libelf.sh")
+                .arg(triple)
+                .env("CC", compiler.path())
+                .current_dir(&src_dir)
+                .status()
+                .expect("Could not execute builf-libelf.sh");
+
+            assert!(status.success(), "Building libelf failed. Perhaps you are missing required tools?");
+        }
+
         let status = process::Command::new("make")
             .arg("install")
             .env("BUILD_STATIC_ONLY", "y")
@@ -169,20 +184,30 @@ fn main() {
             .write_all(out_dir.as_os_str().as_bytes())
             .unwrap();
         io::stdout().write_all("\n".as_bytes()).unwrap();
-        io::stdout()
-            .write_all("cargo:rustc-link-search=".as_bytes())
-            .unwrap();
-        io::stdout()
-            .write_all(src_dir.join("libs").as_os_str().as_bytes())
-            .unwrap();
-        io::stdout()
-            .write_all("\ncargo:rustc-link-lib=static=elf\n\
+        if env::var("CARGO_CFG_TARGET_ENV").unwrap().contains("musl") {
+            // Static linking with musl
+            io::stdout()
+                .write_all("cargo:rustc-link-search=".as_bytes())
+                .unwrap();
+            io::stdout()
+                .write_all(src_dir.join("libs").as_os_str().as_bytes())
+                .unwrap();
+            io::stdout()
+                .write_all("\ncargo:rustc-link-lib=static=elf\n\
                           cargo:rustc-link-lib=static=z\n\
                           cargo:rustc-link-lib=static=argp\n\
                           cargo:rustc-link-lib=static=fts\n\
                           cargo:rustc-link-lib=static=obstack\n\
                           cargo:rustc-link-lib=static=bpf\n".as_bytes())
-            .unwrap();
+                .unwrap();
+        } else {
+            // Assume something else. Link dynamically (upstream behaviour)
+            io::stdout()
+                .write_all("\ncargo:rustc-link-lib=elf\n\
+                          cargo:rustc-link-lib=z\n\
+                          cargo:rustc-link-lib=static=bpf\n".as_bytes())
+                .unwrap();
+        }
         io::stdout().write_all("cargo:include=".as_bytes()).unwrap();
         io::stdout()
             .write_all(out_dir.as_os_str().as_bytes())

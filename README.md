@@ -41,8 +41,25 @@ This crate is released under the BSD 2-Clause license, and is careful to avoid i
 
 It currently depends on the following third-party libraries:
 
-|            | Website                                                       | License                                  | Linkage |
-|------------|---------------------------------------------------------------|------------------------------------------|---------|
-| **libbpf** | [github.com/libbpf/libbpf](https://github.com/libbpf/libbpf/) | `LGPL-2.1-only OR BSD-2-Clause`          | Static  |
-| **libelf** | [sourceware.org/elfutils](https://sourceware.org/elfutils/)   | `LGPL-2.1-or-later OR LGPL-3.0-or-later` | Dynamic |
-| **zlib**   | [zlib.net](https://www.zlib.net/)                             | `Zlib`                                   | Dynamic |
+#### When building with musl
+
+|                     | Website                                                                          | License                                  | Linkage |
+|---------------------|----------------------------------------------------------------------------------|------------------------------------------|---------|
+| **libbpf**          | [github.com/libbpf/libbpf](https://github.com/libbpf/libbpf/)                    | `LGPL-2.1-only OR BSD-2-Clause`          | Static  |
+| **libelf**          | [sourceware.org/elfutils](https://sourceware.org/elfutils/)                      | `LGPL-2.1-or-later OR LGPL-3.0-or-later` | Static  |
+| **zlib**            | [zlib.net](https://www.zlib.net/)                                                | `Zlib`                                   | Static  |
+| **argp-standalone** | [github.com/ericonr/argp-standalone](https://github.com/ericonr/argp-standalone) | `LGPL-2.1-or-later`                      | Static  |
+| **musl-fts**        | [github.com/void-linux/musl-fts](https://github.com/void-linux/musl-fts)         | `BSD-4-Clause-UC (without clause 3)`     | Static  |
+| **musl-obstack**    | [github.com/void-linux/musl-obstack](https://github.com/void-linux/musl-obstack) | `LGPL-2.1-or-later`                      | Static  |
+
+#### Other libc (not musl, i.e. glibc/gnu)
+
+|                     | Website                                                                          | License                                  | Linkage |
+|---------------------|----------------------------------------------------------------------------------|------------------------------------------|---------|
+| **libbpf**          | [github.com/libbpf/libbpf](https://github.com/libbpf/libbpf/)                    | `LGPL-2.1-only OR BSD-2-Clause`          | Static  |
+| **libelf**          | [sourceware.org/elfutils](https://sourceware.org/elfutils/)                      | `LGPL-2.1-or-later OR LGPL-3.0-or-later` | Dynamic |
+| **zlib**            | [zlib.net](https://www.zlib.net/)                                                | `Zlib`                                   | Dynamic |
+
+### Notes about this fork
+
+This fork requires various additional build dependencies to build the C-libraries required for static linking. TODO documentation.
